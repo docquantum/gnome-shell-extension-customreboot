@@ -21,8 +21,33 @@
 
 /* exported init */
 
+const ExtensionUtils = imports.misc.extensionUtils;
+const Me = ExtensionUtils.getCurrentExtension();
+const SystemdBoot = Me.imports.systemdBoot;
+const Grub = Me.imports.grub;
+const Main = imports.gi.ui.main; 
+
+const BootLoaderType = {
+    0: SYSTEMD_BOOT,
+    1: GRUB
+};
+
+const BootLoaderClass = {
+    0: SystemdBoot,
+    1: Grub
+};
+
+
+
+function init() {
+    return new Extension();
+}
+
 class Extension {
     constructor() {
+        this._bootOptions = null;
+        this._currentSetOption = null;
+        this._currentBootLoader = null;
     }
 
     enable() {
@@ -34,12 +59,8 @@ class Extension {
     }
 }
 
-function init() {
-    return new Extension();
-}
-
 function _enable() {
-
+    this._currentBootLoader = getCurrentBootloader();
 }
 
 function _disable() {

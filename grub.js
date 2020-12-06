@@ -1,0 +1,3 @@
+function getBootOptions() {
+    return undefined;
+}

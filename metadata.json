@@ -1,0 +1,9 @@
+{
+  "name": "Custom Reboot",
+  "description": "Reboot into another OS directly from GNOME",
+  "uuid": "customreboot@docquantum.github.io",
+  "shell-version": [
+    "3.36",
+    "3.38"
+  ]
+}

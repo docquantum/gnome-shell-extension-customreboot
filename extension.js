@@ -17,19 +17,28 @@
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  *
  * SPDX-License-Identifier: GPL-3.0-or-later
- */
+*/
 
 /* exported init */
 
+'use strict';
+
+const Gettext = imports.gettext;
 const ExtensionUtils = imports.misc.extensionUtils;
 const Me = ExtensionUtils.getCurrentExtension();
 const SystemdBoot = Me.imports.systemdBoot;
 const Grub = Me.imports.grub;
-const Main = imports.gi.ui.main; 
+const SystemActions = imports.misc.systemActions;
+const Main = imports.ui.main;
+const BoxPointer = imports.ui.boxpointer;
+const PanelMenu = imports.ui.panelMenu;
+const PopupMenu = imports.ui.popupMenu;
+const Domain = Gettext.domain(Me.metadata.uuid);
+const _ = Domain.gettext;
 
 const BootLoaderType = {
-    0: SYSTEMD_BOOT,
-    1: GRUB
+    SYSTEMD_BOOT : 0,
+    GRUB : 1
 };
 
 const BootLoaderClass = {
@@ -37,32 +46,80 @@ const BootLoaderClass = {
     1: Grub
 };
 
-
-
 function init() {
+    ExtensionUtils.initTranslations(Me.metadata.uuid);
     return new Extension();
 }
+
+var g_debug = false;
 
 class Extension {
     constructor() {
         this._bootOptions = null;
         this._currentSetOption = null;
         this._currentBootLoader = null;
+        this._aggregateMenu = Main.panel.statusArea.aggregateMenu;
+        this._system = this._aggregateMenu._system;
+        this._bootOptionsSubMenu = null;
+        this._systemActions = new SystemActions.getDefault();
     }
 
-    enable() {
-        _enable();
+    async enable() {
+        g_debug = true; //temp, need to make accessible from settings
+        this._bootLoaderType = BootLoaderType.SYSTEMD_BOOT;
+        this._currentBootLoader = getCurrentBootloader();
+        this._bootOptions = await this._currentBootLoader.getBootOptions();
+        this._createSubMenu();
+        if(g_debug)
+            this._debugPrint();
     }
 
     disable() {
-        _disable();
+        this.destroy();
+    }
+
+    destroy() {
+        this._bootOptions = null;
+        this._currentSetOption = null;
+        this._currentBootLoader = null;
+        this._destroySubMenu();
+    }
+
+    _debugPrint() {
+        log(`DebugLog for ${Me.metadata.uuid}:`)
+        log(`\tBootloader: ${Object.keys(BootLoaderType)[this._bootLoaderType]}`)
+        log(`\tCurrent Set Option: ${this._currentSetOption}`);
+        log(`\tBoot Options:`)
+        this._bootOptions.forEach((v, k) => {
+            log(`\t\t${k} = ${v}`)
+        });
+    }
+
+    _createSubMenu() {
+        this._bootOptionsSubMenu = new PopupMenu.PopupSubMenuMenuItem(_('Restart Into...'), true);
+        this._bootOptionsSubMenu.icon.icon_name = 'system-reboot-symbolic';
+        this._bootOptions.forEach((id, title) => {
+            let item = new PopupMenu.PopupMenuItem(String(title), false);
+            item.connect('activate', () => {
+                if(this._currentBootLoader.setBootOption(String(id))){
+                    this._currentSetOption = id;
+                    this._systemActions.activateRestart();
+                }
+            });
+            this._bootOptionsSubMenu.menu.addMenuItem(item);
+        });
+        this._system.menu.addMenuItem(this._bootOptionsSubMenu);
+    }
+
+    _destroySubMenu() {
+        this._bootOptionsSubMenu.destroy();
+        this._bootOptionsSubMenu = null;
     }
 }
 
-function _enable() {
-    this._currentBootLoader = getCurrentBootloader();
-}
-
-function _disable() {
-
+const getCurrentBootloader = function() {
+    // Get bootloader from system or settings...
+    
+    // Default to systemd-boot right now...
+    return BootLoaderClass[BootLoaderType.SYSTEMD_BOOT];
 }

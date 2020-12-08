@@ -1,9 +1,12 @@
 {
   "name": "Custom Reboot",
   "description": "Reboot into another OS directly from GNOME",
-  "uuid": "customreboot@docquantum.github.io",
+  "original-author": "DocQuantum (Daniel Shchur) <shchurgood@gmail.com>",
   "shell-version": [
     "3.36",
     "3.38"
-  ]
+  ],
+  "uuid": "customreboot@docquantum.github.io",
+  "url": "https://github.com/docquantum/gnome-shell-extension-customreboot",
+  "version": "1"
 }

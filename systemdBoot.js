@@ -23,9 +23,7 @@
 
 'use strict';
 
-const Gio = imports.gi.Gio;
 const Me = imports.misc.extensionUtils.getCurrentExtension();
-const debug = Me.g_debug;
 const Utils = Me.imports.utils;
 
 /**
@@ -36,18 +34,13 @@ const Utils = Me.imports.utils;
  * installed boot options in systemd-boot. This will only
  * work with the current boot, so if any new options are added,
  * they will only show up on the next boot.
- * 
- * TODO: Possibly also parse the configs in '/boot/loader/entries',
- * however, this is not as portable since the boot partition may be
- * mounted at '/efi', '/boot/efi' or some other location.
  */
 async function getBootOptions() {
     try {
         let [status, stdout, stderr] = await Utils.execCommand(["/usr/sbin/bootctl", "list"]);
         if (status !== 0)
             throw new Error(`Failed to get list from bootctl: ${status}\n${stdout}\n${stderr}`) ;
-        if (debug)
-            log(`bootctl list: ${status}\n${stdout}\n${stderr}`);
+        Utils._log(`bootctl list: ${status}\n${stdout}\n${stderr}`);
         let lines = String(stdout).split('\n');
         let titleRx = /(?<=title:\s+).+/;
         let idRx = /(?<=id:\s+).+/;
@@ -63,7 +56,7 @@ async function getBootOptions() {
             }
         });
         if (titles.length !== ids.length)
-            throw new "Number of titles and ids do not match!";
+            throw new Error("Number of titles and ids do not match!");
         let bootOptions = new Map();
         for (let i = 0; i < titles.length; i++) {
             bootOptions.set(titles[i], ids[i])
@@ -74,14 +67,36 @@ async function getBootOptions() {
         return undefined;
     }
 }
+/**
+ * getDefaultOption:
+ * @param {Map} bootOptions 
+ * @returns {String} default boot option
+ * 
+ * WARN: May be removed/refactored in the future...
+ * 
+ * Given the boot options map that was parsed previously,
+ * find the default based on the names since the default
+ * options has '(default)', given by `bootctl`.
+ */
+function getDefaultOption(bootOptions) {
+    let rx = /.+\(default\)/;
+    bootOptions.forEach((v, k) => {
+        opt = rx.exec(k);
+        if(opt && opt.length) {
+            return v;
+        }
+    });
+    return undefined;
+}
 
 /**
  * setBootOption:
  * 
  * @param {string} id
+ * @returns {bool} whether it was able to set it or not
  * 
- * The unique ID to be passed to `bootctl` so that that boot option is set
- * to be the one to boot off of next boot. 
+ * The unique ID to be passed to `bootctl` so that that
+ * boot option is set to be the one to boot off of next boot. 
  */
 async function setBootOption(id) {
     try {
@@ -89,12 +104,11 @@ async function setBootOption(id) {
             ['/usr/bin/pkexec', '/usr/sbin/bootctl', 'set-oneshot', id],
         );
         if (status !== 0)
-            throw Error(`Failed to set boot option to ${id}: ${status}\n${stdout}\n${stderr}`);
-        if (debug)
-            log(`Set boot option to ${id}: ${status}\n${stdout}\n${stderr}`);
+            throw new Error(`Failed to set boot option to ${id}:\nExitCode: ${status}\nstdout: ${stdout}\nstderr: ${stderr}\n`);
+        Utils._log(`Set boot option to ${id}: ${status}\n${stdout}\n${stderr}`);
         return true;
     } catch (e) {
-        logError(e);
+        Utils._logWarning(e);
         return false;
     }
 }

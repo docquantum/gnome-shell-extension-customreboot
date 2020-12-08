@@ -23,35 +23,20 @@
 
 'use strict';
 
-const Gettext = imports.gettext;
 const ExtensionUtils = imports.misc.extensionUtils;
 const Me = ExtensionUtils.getCurrentExtension();
-const SystemdBoot = Me.imports.systemdBoot;
-const Grub = Me.imports.grub;
-const SystemActions = imports.misc.systemActions;
+const Utils = Me.imports.utils;
 const Main = imports.ui.main;
-const BoxPointer = imports.ui.boxpointer;
-const PanelMenu = imports.ui.panelMenu;
 const PopupMenu = imports.ui.popupMenu;
+const SystemActions = imports.misc.systemActions;
+const Gettext = imports.gettext;
 const Domain = Gettext.domain(Me.metadata.uuid);
 const _ = Domain.gettext;
-
-const BootLoaderType = {
-    SYSTEMD_BOOT : 0,
-    GRUB : 1
-};
-
-const BootLoaderClass = {
-    0: SystemdBoot,
-    1: Grub
-};
 
 function init() {
     ExtensionUtils.initTranslations(Me.metadata.uuid);
     return new Extension();
 }
-
-var g_debug = false;
 
 class Extension {
     constructor() {
@@ -64,14 +49,17 @@ class Extension {
         this._systemActions = new SystemActions.getDefault();
     }
 
-    async enable() {
-        g_debug = true; //temp, need to make accessible from settings
-        this._bootLoaderType = BootLoaderType.SYSTEMD_BOOT;
-        this._currentBootLoader = getCurrentBootloader();
-        this._bootOptions = await this._currentBootLoader.getBootOptions();
-        this._createSubMenu();
-        if(g_debug)
+    enable() {
+        this._bootLoaderType = 0;
+        this._currentBootLoader = Utils.getCurrentBootloader();
+        this._currentBootLoader.getBootOptions().then((bootOps) => {
+            if(bootOps === undefined)
+                throw new Error("Failed to parse get boot options!")
+            this._bootOptions = bootOps;
+            this._currentSetOption = getDefaultOption(bootOps);
+            this._createSubMenu();
             this._debugPrint();
+        });
     }
 
     disable() {
@@ -86,12 +74,12 @@ class Extension {
     }
 
     _debugPrint() {
-        log(`DebugLog for ${Me.metadata.uuid}:`)
-        log(`\tBootloader: ${Object.keys(BootLoaderType)[this._bootLoaderType]}`)
-        log(`\tCurrent Set Option: ${this._currentSetOption}`);
-        log(`\tBoot Options:`)
+        Utils._log(`${Me.metadata.uuid} Loaded with:`)
+        Utils._log(`\tBootloader: ${Utils.getBootLoaderName(this._bootLoaderType)}`)
+        Utils._log(`\tCurrent Set Option: ${this._currentSetOption}`);
+        Utils._log(`\tBoot Options:`)
         this._bootOptions.forEach((v, k) => {
-            log(`\t\t${k} = ${v}`)
+            Utils._log(`\t\t${k} = ${v}`)
         });
     }
 
@@ -101,13 +89,13 @@ class Extension {
         this._bootOptions.forEach((id, title) => {
             let item = new PopupMenu.PopupMenuItem(String(title), false);
             item.connect('activate', () => {
-                this._currentBootLoader.setBootOption(String(id))
-                .then(result => {
+                this._currentBootLoader.setBootOption(String(id)).then(result => {
                     if(result){
                         this._currentSetOption = id;
                         this._systemActions.activateRestart();
-                    } else if(g_debug)
-                        log("Failed to set boot option, or canceled!");
+                    } else {
+                        Utils._logWarn("Failed to set boot option, or canceled!");
+                    }
                 })
                 .catch(e => {
                     logError(e);
@@ -116,17 +104,11 @@ class Extension {
             this._bootOptionsSubMenu.menu.addMenuItem(item);
         });
         this._system.menu.addMenuItem(this._bootOptionsSubMenu);
+        Utils._log("Created and added the boot submenu.");
     }
 
     _destroySubMenu() {
         this._bootOptionsSubMenu.destroy();
         this._bootOptionsSubMenu = null;
     }
-}
-
-const getCurrentBootloader = function() {
-    // Get bootloader from system or settings...
-    
-    // Default to systemd-boot right now...
-    return BootLoaderClass[BootLoaderType.SYSTEMD_BOOT];
 }

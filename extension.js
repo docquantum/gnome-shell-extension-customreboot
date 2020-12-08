@@ -54,9 +54,9 @@ class Extension {
         this._currentBootLoader = Utils.getCurrentBootloader();
         this._currentBootLoader.getBootOptions().then((bootOps) => {
             if(bootOps === undefined)
-                throw new Error("Failed to parse get boot options!")
+                throw new Error("Failed to get system boot options!")
             this._bootOptions = bootOps;
-            this._currentSetOption = getDefaultOption(bootOps);
+            // this._currentSetOption = this._currentBootLoader.getDefaultOption(bootOps);
             this._createSubMenu();
             this._debugPrint();
         });

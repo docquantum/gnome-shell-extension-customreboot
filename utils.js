@@ -19,10 +19,50 @@
  * SPDX-License-Identifier: GPL-3.0-or-later
 */
 
-/* exports execCommand */
+/* exports execCommand, getCurrentBootloader, getBootLoaderName,
+            setDebug, _log, _logWarning */
 
+const Me = imports.misc.extensionUtils.getCurrentExtension();
+// const Prefs = Me.imports.prefs;
 
+const SystemdBoot = Me.imports.systemdBoot;
+const Grub = Me.imports.grub;
 const Gio = imports.gi.Gio;
+
+var DEBUG = false;
+
+const BootLoaderType = {
+    SYSTEMD_BOOT : 0,
+    GRUB : 1
+};
+
+const BootLoaderClass = {
+    0: SystemdBoot,
+    1: Grub
+};
+
+/**
+ * getCurrentBootloader:
+ * @returns {string}
+ * 
+ * Returns the current bootloader based on system configuration
+ * and setting preferences.
+ */
+function getCurrentBootloader() {
+    // Default to systemd-boot right now...
+    return BootLoaderClass[BootLoaderType.SYSTEMD_BOOT];
+}
+
+/**
+ * getBootLoaderName:
+ * @param {BootLoaderType} type
+ * @returns {string}
+ * 
+ * Given a bootloader type, returns the name in string form.
+ */
+function getBootLoaderName(type) {
+    return Object.keys(BootLoaderType)[type];
+}
 
 /**
  * execCommand:
@@ -49,7 +89,7 @@ function execCommand(argv, input = null, cancellable = null) {
             try {
                 resolve([(function() {
                     if(!proc.get_if_exited())
-                        throw "fail";
+                        throw new Error("Subprocess failed to exit in time!");
                     return proc.get_exit_status()
                 })()].concat(proc.communicate_utf8_finish(res).slice(1)));
             } catch (e) {
@@ -57,4 +97,36 @@ function execCommand(argv, input = null, cancellable = null) {
             }
         });
     });
+}
+
+/**
+ * setDebug:
+ * @param {bool} value
+ * 
+ * Set's whether to debug or to not.
+ */
+function setDebug(value){
+    DEBUG = value;
+}
+
+/**
+ * _log:
+ * @param {String} msg 
+ * 
+ * Logs general messages if debug is set to true.
+ */
+function _log(msg) {
+    if(DEBUG)
+        log(`CustomReboot NOTE: ${msg}`);
+}
+
+/**
+ * _logWarning:
+ * @param {String} msg 
+ * 
+ * Logs warning messages if debug is set to true.
+ */
+function _logWarning(msg) {
+    if(DEBUG)
+        log(`CustomReboot WARN: ${msg}`);
 }

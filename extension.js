@@ -53,7 +53,7 @@ class Extension {
         Utils.setDebug(false);
         this._bootLoaderType = 0;
         this._currentBootLoader = Utils.getCurrentBootloader();
-        this._currentBootLoader.getBootOptions().then((bootOps, defaultOpt) => {
+        this._currentBootLoader.getBootOptions().then(([bootOps, defaultOpt]) => {
             if(bootOps === undefined)
                 throw new Error("Failed to get system boot options!")
             this._bootOptions = bootOps;

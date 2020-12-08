@@ -70,6 +70,8 @@ function getBootLoaderName(type) {
  * @param {String[]} argv 
  * @param {String} input 
  * @param {Gio.Cancellable} cancellable
+ * @returns {Promise} Function execution
+ * => @returns {[int, String, String]} [StatusCode, STDOUT, STDERR]
  * 
  * Executes a command asynchronously.
  */

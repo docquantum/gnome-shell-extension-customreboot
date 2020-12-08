@@ -101,10 +101,17 @@ class Extension {
         this._bootOptions.forEach((id, title) => {
             let item = new PopupMenu.PopupMenuItem(String(title), false);
             item.connect('activate', () => {
-                if(this._currentBootLoader.setBootOption(String(id))){
-                    this._currentSetOption = id;
-                    this._systemActions.activateRestart();
-                }
+                this._currentBootLoader.setBootOption(String(id))
+                .then(result => {
+                    if(result){
+                        this._currentSetOption = id;
+                        this._systemActions.activateRestart();
+                    } else if(g_debug)
+                        log("Failed to set boot option, or canceled!");
+                })
+                .catch(e => {
+                    logError(e);
+                });                
             });
             this._bootOptionsSubMenu.menu.addMenuItem(item);
         });

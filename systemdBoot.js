@@ -104,7 +104,7 @@ async function setBootOption(id) {
             ['/usr/bin/pkexec', '/usr/sbin/bootctl', 'set-oneshot', id],
         );
         if (status !== 0)
-            throw new String(`Failed to set boot option to ${id}:\nExitCode: ${status}\nstdout: ${stdout}\nstderr: ${stderr}\n`);
+            throw new String(`Failed to set boot option to ${id}:\nExitCode: ${status}\nstdout: ${stdout}\nstderr: ${stderr}`);
         Utils._log(`Set boot option to ${id}: ${status}\n${stdout}\n${stderr}`);
         return true;
     } catch (e) {

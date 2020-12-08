@@ -94,7 +94,7 @@ class Extension {
                         this._currentSetOption = id;
                         this._systemActions.activateRestart();
                     } else {
-                        Utils._logWarn("Failed to set boot option, or canceled!");
+                        Utils._logWarning("Failed to set boot option, or canceled!");
                     }
                 })
                 .catch(e => {

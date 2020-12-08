@@ -28,7 +28,7 @@ const Utils = Me.imports.utils;
 
 /**
  * getBootOptions:
- * @returns {Map} of title = id
+ * @returns {[Map, String]} Map(title, id), defaultOption
  * 
  * Runs a `bootctl list` process to get the currently
  * installed boot options in systemd-boot. This will only
@@ -44,15 +44,22 @@ async function getBootOptions() {
         let lines = String(stdout).split('\n');
         let titleRx = /(?<=title:\s+).+/;
         let idRx = /(?<=id:\s+).+/;
+        let defaultRx = /\(default\)/;
         let titles = [];
         let ids = []
+        let defaultOpt;
         lines.forEach(l => {
             let title = titleRx.exec(l);
             let id = idRx.exec(l);
             if (title && title.length) {
-                titles.push(title);
+                titles.push(String(title));
+                let defaultRes = defaultRx.exec(title);
+                Utils._log('regex ' + defaultRes);
+                if(defaultRes && defaultRes.length){
+                    defaultOpt = String(title);
+                }
             } else if (id && id.length) {
-                ids.push(id);
+                ids.push(String(id));
             }
         });
         if (titles.length !== ids.length)
@@ -61,32 +68,14 @@ async function getBootOptions() {
         for (let i = 0; i < titles.length; i++) {
             bootOptions.set(titles[i], ids[i])
         }
-        return bootOptions;
+        bootOptions.forEach((v, k) => {
+            Utils._log(`${k} = ${v}`);
+        })
+        return [bootOptions, bootOptions.get(defaultOpt)];
     } catch (e) {
         logError(e);
         return undefined;
     }
-}
-/**
- * getDefaultOption:
- * @param {Map} bootOptions 
- * @returns {String} default boot option
- * 
- * WARN: May be removed/refactored in the future...
- * 
- * Given the boot options map that was parsed previously,
- * find the default based on the names since the default
- * options has '(default)', given by `bootctl`.
- */
-function getDefaultOption(bootOptions) {
-    let rx = /.+\(default\)/;
-    bootOptions.forEach((v, k) => {
-        opt = rx.exec(k);
-        if(opt && opt.length) {
-            return v;
-        }
-    });
-    return undefined;
 }
 
 /**

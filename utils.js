@@ -42,6 +42,27 @@ const BootLoaderClass = {
 };
 
 /**
+ * getBootctlPath
+ * @returns {string}
+ * 
+ * Returns the path of the bootctl binary or an empty string if not found
+ */
+function getBootctlPath() {
+    let pathes = ["/usr/sbin/bootctl", "/usr/bin/bootctl"];
+
+    let file;
+
+    for (let i = 0; i < pathes.length; i++) {
+        file = Gio.file_new_for_path(pathes[i]);
+        if (file.query_exists(null)) {
+            return pathes[i];
+        }
+    }
+    
+    return "";    
+}
+
+/**
  * getCurrentBootloader:
  * @returns {string}
  * 

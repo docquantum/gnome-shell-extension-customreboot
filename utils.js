@@ -63,6 +63,27 @@ function getBootctlPath() {
 }
 
 /**
+ * getGrubConfig
+ * @returns {string}
+ * 
+ * Returns the path of the grub config or an empty string if not exist
+ */
+function getGrubConfig() {
+    let pathes = ["/boot/grub/grub.cfg", "/boot/grub2/grub.cfg"];
+
+    let file;
+
+    for (let i = 0; i < pathes.length; i++) {
+        file = Gio.file_new_for_path(pathes[i]);
+        if (file.query_exists(null)) {
+            return pathes[i];
+        }
+    }
+
+    return "";
+}
+
+/**
  * getCurrentBootloader:
  * @returns {string}
  * 
@@ -70,8 +91,26 @@ function getBootctlPath() {
  * and setting preferences.
  */
 function getCurrentBootloader() {
-    // Default to systemd-boot right now...
-    return BootLoaderClass[BootLoaderType.SYSTEMD_BOOT];
+    return BootLoaderClass[getCurrentBootloaderType()];
+}
+
+/**
+ * getCurrentBootloaderType:
+ * @returns {string}
+ * 
+ * Returns the current bootloader based on system configuration
+ * and setting preferences.
+ */
+ function getCurrentBootloaderType() {
+    // If there is a grub config, use grub-reboot, otherwise use systemdboot
+    
+    let grubcfg = getGrubConfig();
+
+    if (grubcfg != "") {
+        return BootLoaderType.GRUB;
+    }
+
+    return BootLoaderType.SYSTEMD_BOOT;
 }
 
 /**

@@ -48,14 +48,14 @@ const BootLoaderClass = {
  * Returns the path of the bootctl binary or an empty string if not found
  */
 function getBootctlPath() {
-    let pathes = ["/usr/sbin/bootctl", "/usr/bin/bootctl"];
+    let paths = ["/usr/sbin/bootctl", "/usr/bin/bootctl"];
 
     let file;
 
-    for (let i = 0; i < pathes.length; i++) {
-        file = Gio.file_new_for_path(pathes[i]);
+    for (let i = 0; i < paths.length; i++) {
+        file = Gio.file_new_for_path(paths[i]);
         if (file.query_exists(null)) {
-            return pathes[i];
+            return paths[i];
         }
     }
     
@@ -69,14 +69,14 @@ function getBootctlPath() {
  * Returns the path of the grub config or an empty string if not exist
  */
 function getGrubConfig() {
-    let pathes = ["/boot/grub/grub.cfg", "/boot/grub2/grub.cfg"];
+    let paths = ["/boot/grub/grub.cfg", "/boot/grub2/grub.cfg"];
 
     let file;
 
-    for (let i = 0; i < pathes.length; i++) {
-        file = Gio.file_new_for_path(pathes[i]);
+    for (let i = 0; i < paths.length; i++) {
+        file = Gio.file_new_for_path(paths[i]);
         if (file.query_exists(null)) {
-            return pathes[i];
+            return paths[i];
         }
     }
 

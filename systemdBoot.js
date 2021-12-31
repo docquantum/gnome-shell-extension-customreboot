@@ -41,7 +41,6 @@ async function getBootOptions() {
         Utils._log(`Failed to find bootctl binary`);
         return undefined;
     }
-    Utils._log(`bootcl found at ${bootctl}`);
 
     try {
         let [status, stdout, stderr] = await Utils.execCommand([bootctl, "list"]);

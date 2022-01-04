@@ -36,8 +36,14 @@ const Utils = Me.imports.utils;
  * they will only show up on the next boot.
  */
 async function getBootOptions() {
+    let bootctl = Utils.getBootctlPath();
+    if (bootctl == "") {
+        Utils._log(`Failed to find bootctl binary`);
+        return undefined;
+    }
+
     try {
-        let [status, stdout, stderr] = await Utils.execCommand(["/usr/sbin/bootctl", "list"]);
+        let [status, stdout, stderr] = await Utils.execCommand([bootctl, "list"]);
         if (status !== 0)
             throw new Error(`Failed to get list from bootctl: ${status}\n${stdout}\n${stderr}`) ;
         Utils._log(`bootctl list: ${status}\n${stdout}\n${stderr}`);

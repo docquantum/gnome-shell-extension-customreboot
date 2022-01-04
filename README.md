@@ -8,7 +8,7 @@ Inspired by and based on [patriziobruno/grubreboot-gnome-shell-extension](https:
 | Bootloader   | Supported |
 | ------------ | --------- |
 | systemd-boot | Yes       |
-| GRUB         | Planned   |
+| GRUB         | Yes       |
 
 A gnome-shell extension to add a "Custom Restart..." option to the shell system panel that allows you to choose what OS you want to boot into, after which it triggers the typical end session dialog for restart.
 
@@ -25,7 +25,11 @@ When you select the operating system to reboot into, you'll be required to input
 
 ## GRUB
 
-Plan to use similar logic to that used by the original grubreboot-gnome-shell-extension.
+It's able to set the default menu entry using `grub-reboot title`
+
+The presented options are parsed from the grub config.
+
+When you select the operating system to reboot into, you'll be required to input your password because of required permissions to run `grub-reboot`.
 
 ## Caveats
 

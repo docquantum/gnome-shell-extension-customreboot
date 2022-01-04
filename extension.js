@@ -51,7 +51,7 @@ class Extension {
 
     enable() {
         Utils.setDebug(false);
-        this._bootLoaderType = 0;
+        this._bootLoaderType = Utils.getCurrentBootloaderType();
         this._currentBootLoader = Utils.getCurrentBootloader();
         this._currentBootLoader.getBootOptions().then(([bootOps, defaultOpt]) => {
             if(bootOps === undefined)
@@ -109,7 +109,9 @@ class Extension {
     }
 
     _destroySubMenu() {
-        this._bootOptionsSubMenu.destroy();
-        this._bootOptionsSubMenu = null;
+        if (this._bootOptionsSubMenu) {
+            this._bootOptionsSubMenu.destroy();
+            this._bootOptionsSubMenu = null;
+        }
     }
 }
